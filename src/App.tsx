@@ -27,6 +27,7 @@ export default function App() {
   const [now, setNow] = useState(Date.now());
   const [loading, setLoading] = useState(true);
   const [takingPhoto, setTakingPhoto] = useState(false);
+  const [previewImageFailed, setPreviewImageFailed] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -126,32 +127,51 @@ export default function App() {
         timeZoneName: 'short',
       }).format(new Date(event.reveal_at))
     : '';
+  const totalHours = countdown.days * 24 + countdown.hours;
 
   return (
     <main className="page-shell">
       <header className="topbar">
-        <a className="wordmark" href="/" aria-label="Party Camera home">
-          <span className="wordmark-icon" aria-hidden="true">✳</span>
-          PARTY CAMERA
-        </a>
-        <span className="topbar-note">ONE NIGHT. ONE ROLL.</span>
+        <a className="wordmark" href="/" aria-label="Party Camera home">PARTY CAMERA</a>
+        <span className="topbar-note">HALLOWEEN / 2026</span>
       </header>
 
       <section className="camera-card" aria-labelledby="page-title">
-        <div className="card-topline">
-          <span className="eyebrow"><span className="live-dot" /> THE PARTY CAM</span>
-          <span className="roll-label">ROLL NO. 001</span>
+        <div className="hero-copy">
+          <p className="kicker"><span className="live-dot" /> YOU HAD TO BE THERE.</p>
+          <h1 id="page-title">
+            {revealed ? <>THE BIG<br />REVEAL.</> : <>DRESSED TO<br />DIE FOR.</>}
+          </h1>
         </div>
 
-        <div className="hero-copy">
-          <p className="kicker">{revealed ? 'THE WAIT IS OVER' : 'PHOTOS NOW. MEMORIES LATER.'}</p>
-          <h1 id="page-title">{revealed ? 'The party, in full.' : 'You had to be there.'}</h1>
-          <p className="intro">
-            {revealed
-              ? 'Every guest’s photos, all in one place.'
-              : 'Take a few shots. Nobody sees a thing until the big reveal.'}
-          </p>
-        </div>
+        <section className="party-evidence" aria-label="Party photo preview">
+          <div className="poster-rail">
+            <span className="party-date">31<br />OCT</span>
+            <span className="photo-number">ONE<br />NIGHT</span>
+          </div>
+          <div className="evidence-print">
+            {previewImageFailed ? (
+              <div className="party-photo-placeholder">
+                <span>YOUR PHOTO GOES HERE</span>
+                <code>public/photos/IMG_7897.jpg</code>
+              </div>
+            ) : (
+              <img
+                className="party-photo"
+                src="/photos/IMG_7897.jpg"
+                alt="Halloween party preview"
+                onError={() => setPreviewImageFailed(true)}
+              />
+            )}
+            {!revealed && <span className="sealed-sticker">NO PEEKING UNTIL REVEAL ↗</span>}
+          </div>
+        </section>
+
+        <p className="intro">
+          {revealed
+            ? 'The night, from every angle. All the party photos are finally here.'
+            : '24 shots each. One special night. Your camera lives right here in your browser.'}
+        </p>
 
         {loading ? (
           <div className="status-panel" role="status">Getting your camera ready…</div>
@@ -185,16 +205,13 @@ export default function App() {
           </section>
         ) : event ? (
           <section className="camera-body" aria-label="Camera and reveal countdown">
-            <div className="camera-top">
-              <div className="viewfinder">
-                <span className="viewfinder-label">YOUR CAMERA</span>
-                <span className="viewfinder-icon" aria-hidden="true">✳</span>
-                <span className="viewfinder-hint">{takingPhoto ? 'DEVELOPING…' : 'READY WHEN YOU ARE'}</span>
+            <div className="camera-status">
+              <div className="camera-state">
+                <span className="counter-label">{takingPhoto ? 'CAMERA / SAVING' : 'YOUR CAMERA / READY'}</span>
+                <span className="shots-remaining">SHOTS REMAINING</span>
               </div>
-              <div className="shot-counter" aria-label={`${remaining} shots remaining`}>
-                <span className="counter-label">SHOTS LEFT</span>
-                <span className="counter-number">{formatNumber(remaining)}</span>
-                <span className="counter-total">/ {PHOTO_LIMIT}</span>
+              <div className="shot-count" aria-label={`${remaining} shots remaining`}>
+                <span>{formatNumber(remaining)}</span><small> / {PHOTO_LIMIT}</small>
               </div>
             </div>
 
@@ -209,41 +226,51 @@ export default function App() {
                   change.currentTarget.value = '';
                 }}
               />
-              <span className="shutter-icon" aria-hidden="true">{takingPhoto ? '…' : '↗'}</span>
+              <img className="shutter-icon" src="/icons/camera.svg" alt="" />
               <span>{takingPhoto ? 'Saving your shot' : remaining === 0 ? 'Roll finished' : 'Take a photo'}</span>
             </label>
 
-            <p className="privacy-note"><span aria-hidden="true">◉</span> Your photos stay under wraps until reveal.</p>
+            <p className="privacy-note">
+              <span className="lock-icon privacy-lock" aria-hidden="true" />
+              All photos stay private &amp; unseen until reveal.
+            </p>
 
             <div className="reveal-panel">
-              <div className="reveal-copy">
+              <div className="reveal-details">
                 <span className="reveal-label">THE BIG REVEAL</span>
-                <span className="reveal-date">{revealDate}</span>
+                <span className="locked-state">
+                  <span className="lock-icon locked-lock" aria-hidden="true" />
+                  LOCKED
+                </span>
               </div>
-              <div className="countdown" aria-label={`${countdown.days} days, ${countdown.hours} hours, ${countdown.minutes} minutes, ${countdown.seconds} seconds until reveal`}>
-                <span>{countdown.days}<small>D</small></span>
-                <i>:</i>
-                <span>{formatNumber(countdown.hours)}<small>H</small></span>
-                <i>:</i>
-                <span>{formatNumber(countdown.minutes)}<small>M</small></span>
-                <i>:</i>
-                <span>{formatNumber(countdown.seconds)}<small>S</small></span>
+              <div className="reveal-timing">
+                <div className="reveal-copy">
+                  <span className="reveal-date">{revealDate}</span>
+                  <span className="reveal-label">REVEAL IN →</span>
+                </div>
+                <div
+                  className="countdown"
+                  aria-label={`${countdown.days} days, ${countdown.hours} hours, ${countdown.minutes} minutes, ${countdown.seconds} seconds until reveal`}
+                >
+                  <span className="countdown-clock">{formatNumber(totalHours)}:{formatNumber(countdown.minutes)}:{formatNumber(countdown.seconds)}</span>
+                  <span className="countdown-units">
+                    <span>HR</span>
+                    <span>MIN</span>
+                    <span>SEC</span>
+                  </span>
+                </div>
               </div>
+              <span className="reveal-hint">At reveal, this link becomes our shared gallery.</span>
             </div>
           </section>
         ) : null}
 
-        {error && event && (
-          <p className="inline-error" role="alert">{error}</p>
-        )}
+        {error && event && <p className="inline-error" role="alert">{error}</p>}
 
         <footer className="card-footer">
-          <span>MADE FOR THE MOMENTS IN BETWEEN</span>
-          <span>✳</span>
+          <span>HALLOWEEN ’26 · ONE NIGHT ONLY</span>
         </footer>
       </section>
-
-      <p className="page-footnote">A little mystery makes a better memory.</p>
     </main>
   );
 }

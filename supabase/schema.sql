@@ -113,10 +113,10 @@ with check (
   and exists (
     select 1
     from public.events
-    where events.id = (storage.foldername(name))[1]
+    where events.id = (storage.foldername(storage.objects.name))[1]
       and events.reveal_at > now()
   )
-  and (storage.foldername(name))[2] = (select auth.uid())::text
+  and (storage.foldername(storage.objects.name))[2] = (select auth.uid())::text
 );
 
 drop policy if exists "Guests can read their own or revealed photos" on storage.objects;
@@ -129,7 +129,7 @@ using (
   and exists (
     select 1
     from public.events
-    where events.id = (storage.foldername(name))[1]
+    where events.id = (storage.foldername(storage.objects.name))[1]
       and events.reveal_at <= now()
   )
 );

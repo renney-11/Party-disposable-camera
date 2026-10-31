@@ -107,4 +107,5 @@ Open that preview link on your phone, take a photo, wait for the countdown, and 
 - Guest identity is browser-based, not a phone hardware ID. Clearing browser data or switching devices can create a new guest identity.
 - Anyone with the event link can open the gallery after reveal.
 - The Supabase project URL and anon/publishable key are intended for the website. Never expose a Supabase `service_role` or secret key.
-- The visual styles are in `src/styles.css`; event/photo operations are in `src/lib/party.ts`; Supabase rules and event time are in `supabase/schema.sql`.
+- The visual styles and theme variables are in `src/styles.css`; event/photo operations are in `src/lib/party.ts`; Supabase rules and event time are in `supabase/schema.sql`.
+- To add the design's sample party photo, put a JPEG named `IMG_7897.jpg` in `public/photos/`. The page uses it as a preview; it is separate from guests' private Supabase uploads.
