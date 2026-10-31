@@ -719,24 +719,6 @@ h1 {
   object-fit: contain;
 }
 
-.viewer-metadata {
-  display: flex;
-  min-height: 66px;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 16px 0 18px;
-  border-bottom: 1px solid var(--color-border);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 14px;
-}
-
-.photographer { display: flex; flex-direction: column; gap: 4px; }
-.photographer > span { color: var(--gallery-accent); }
-.photographer strong { color: var(--color-text); font-size: 10px; font-weight: 400; }
-.viewer-date { color: var(--color-text); }
-
 .photo-navigation {
   display: flex;
   min-height: 54px;

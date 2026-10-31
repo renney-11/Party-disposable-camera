@@ -1,9 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { PHOTO_LIMIT, type GalleryPhoto, type PartyEvent, createPhotoDownloadUrl, joinParty, loadGallery, takePhoto } from './lib/party';
-import { isSupabaseConfigured } from './lib/supabase';
+import type { User } from "@supabase/supabase-js";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  createPhotoDownloadUrl,
+  joinParty,
+  loadGallery,
+  PHOTO_LIMIT,
+  takePhoto,
+  type GalleryPhoto,
+  type PartyEvent,
+} from "./lib/party";
+import { isSupabaseConfigured } from "./lib/supabase";
 
-type Countdown = { days: number; hours: number; minutes: number; seconds: number };
+type Countdown = {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
 
 function getCountdown(milliseconds: number): Countdown {
   const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
@@ -16,26 +29,25 @@ function getCountdown(milliseconds: number): Countdown {
 }
 
 function formatNumber(number: number) {
-  return number.toString().padStart(2, '0');
+  return number.toString().padStart(2, "0");
 }
 
-function formatPhotoDate(createdAt: string) {
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/Berlin',
-  }).format(new Date(createdAt));
-}
-
-function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; loading: boolean; error: string }) {
+function PhotoGallery({
+  photos,
+  loading,
+  error,
+}: {
+  photos: GalleryPhoto[];
+  loading: boolean;
+  error: string;
+}) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saveProgress, setSaveProgress] = useState('');
-  const [saveMessage, setSaveMessage] = useState('');
-  const [saveError, setSaveError] = useState('');
+  const [saveProgress, setSaveProgress] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [shareCompleted, setShareCompleted] = useState(false);
   const [preparedFiles, setPreparedFiles] = useState<File[] | null>(null);
   const galleryScrollPosition = useRef<number | null>(null);
   const selectedPhotos = photos.filter((photo) => selectedIds.has(photo.id));
@@ -58,22 +70,29 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
     function changePhoto(index: number) {
       setViewerIndex(index);
       setPreparedFiles(null);
-      setSaveMessage('');
-      setSaveError('');
+      setSaveMessage("");
+      setSaveError("");
+      setShareCompleted(false);
     }
 
     function onKeyDown(keyEvent: KeyboardEvent) {
-      if (keyEvent.key === 'Escape') setViewerIndex(null);
-      if (keyEvent.key === 'ArrowLeft') {
+      if (keyEvent.key === "Escape") {
+        setViewerIndex(null);
+        setPreparedFiles(null);
+        setSaveMessage("");
+        setSaveError("");
+        setShareCompleted(false);
+      }
+      if (keyEvent.key === "ArrowLeft") {
         changePhoto((currentViewerIndex - 1 + photos.length) % photos.length);
       }
-      if (keyEvent.key === 'ArrowRight') {
+      if (keyEvent.key === "ArrowRight") {
         changePhoto((currentViewerIndex + 1) % photos.length);
       }
     }
 
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [photos.length, viewerIndex]);
 
   function toggleSelected(photoId: string) {
@@ -84,8 +103,9 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
       return updated;
     });
     setPreparedFiles(null);
-    setSaveMessage('');
-    setSaveError('');
+    setSaveMessage("");
+    setSaveError("");
+    setShareCompleted(false);
   }
 
   async function preparePhotos(photosToSave: GalleryPhoto[]) {
@@ -93,65 +113,84 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
 
     setSaving(true);
     setPreparedFiles(null);
-    setSaveMessage('');
-    setSaveError('');
+    setSaveMessage("");
+    setSaveError("");
+    setShareCompleted(false);
 
     try {
       const files: File[] = [];
       for (const [index, photo] of photosToSave.entries()) {
         setSaveProgress(`PREPARING ${index + 1} / ${photosToSave.length}`);
         const photoNumber = photos.indexOf(photo) + 1;
-        const extension = photo.storagePath.split('.').pop()?.toLowerCase() || 'jpg';
-        const fileName = `acid-afterparty-${formatNumber(photoNumber)}.${extension}`;
+        const extension =
+          photo.storagePath.split(".").pop()?.toLowerCase() || "jpg";
+        const fileName = `halloween-home-${formatNumber(photoNumber)}.${extension}`;
         const downloadUrl = await createPhotoDownloadUrl(photo, fileName);
         const response = await fetch(downloadUrl);
-        if (!response.ok) throw new Error(`Could not prepare photo ${formatNumber(photoNumber)}.`);
+        if (!response.ok)
+          throw new Error(
+            `Could not prepare photo ${formatNumber(photoNumber)}.`,
+          );
         const blob = await response.blob();
-        files.push(new File([blob], fileName, { type: blob.type || 'image/jpeg' }));
+        files.push(
+          new File([blob], fileName, { type: blob.type || "image/jpeg" }),
+        );
       }
       if (!navigator.share || !navigator.canShare?.({ files })) {
-        throw new Error('This browser cannot share photo files. Open the party link in Safari or Chrome on your phone.');
+        throw new Error(
+          "This browser cannot share photo files. Open the party link in Safari or Chrome on your phone.",
+        );
       }
       setPreparedFiles(files);
-      setSaveMessage('PHOTOS READY. TAP OPEN SAVE MENU.');
+      setSaveMessage("PHOTOS READY. TAP AGAIN TO SHARE.");
     } catch (cause) {
-      const reason = cause instanceof Error ? cause.message : 'The selected photos could not be prepared.';
+      const reason =
+        cause instanceof Error
+          ? cause.message
+          : "The selected photos could not be prepared.";
       setSaveError(reason);
     } finally {
       setSaving(false);
-      setSaveProgress('');
+      setSaveProgress("");
     }
   }
 
   async function openShareMenu(files: File[]) {
     if (saving) return;
     if (!navigator.share || !navigator.canShare?.({ files })) {
-      setSaveError('This browser cannot share photo files. Open the party link in Safari or Chrome on your phone.');
+      setSaveError(
+        "This browser cannot share photo files. Open the party link in Safari or Chrome on your phone.",
+      );
       return;
     }
 
     setSaving(true);
-    setSaveMessage('');
-    setSaveError('');
+    setSaveMessage("");
+    setSaveError("");
     try {
       const shareRequest = navigator.share({
         files,
-        title: 'Acid Afterparty photos',
-        text: 'Save these photos to your device.',
+        title: "Halloween Home photos",
+        text: "Save these photos to your device.",
       });
-      setSaveProgress('OPENING SAVE MENU…');
+      setSaveProgress("OPENING SAVE MENU…");
       await shareRequest;
-      setSaveMessage('SHARE MENU CLOSED. CHECK YOUR PHOTOS OR FILES.');
       setPreparedFiles(null);
+      setShareCompleted(true);
+      setSaveMessage("DONE — CHECK YOUR PHOTOS OR FILES.");
     } catch (cause) {
-      if (cause instanceof DOMException && cause.name === 'AbortError') {
-        setSaveMessage('SHARE CANCELED. NO PHOTOS WERE SAVED.');
+      if (cause instanceof DOMException && cause.name === "AbortError") {
+        setSaveMessage("SHARE CANCELED. NO PHOTOS WERE SAVED.");
         return;
       }
-      setSaveError(cause instanceof Error ? cause.message : 'The share menu could not be opened.');
+      setSaveError(
+        cause instanceof Error
+          ? cause.message
+          : "The share menu could not be opened.",
+      );
     } finally {
       setSaving(false);
-      setSaveProgress('');
+      setSaveProgress("");
     }
   }
 
@@ -166,8 +205,9 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
   function openPhoto(index: number) {
     galleryScrollPosition.current = window.scrollY;
     setPreparedFiles(null);
-    setSaveMessage('');
-    setSaveError('');
+    setSaveMessage("");
+    setSaveError("");
+    setShareCompleted(false);
     setViewerIndex(index);
   }
 
@@ -175,31 +215,38 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
     return (
       <main className="page-shell gallery-shell photo-viewer-shell">
         <header className="gallery-header">
-          <button className="viewer-back" type="button" onClick={() => setViewerIndex(null)}>
+          <button
+            className="viewer-back"
+            type="button"
+            onClick={() => {
+              setViewerIndex(null);
+              setPreparedFiles(null);
+              setSaveMessage("");
+              setSaveError("");
+              setShareCompleted(false);
+            }}
+          >
             <svg aria-hidden="true" viewBox="0 0 18 18" fill="none">
               <path d="M11.5 3.5 6 9l5.5 5.5M6.5 9h9" />
             </svg>
             BACK TO GALLERY
           </button>
-          <span className="viewer-position">{formatNumber(viewerIndex + 1)} / {formatNumber(photos.length)}</span>
+          <span className="viewer-position">
+            {formatNumber(viewerIndex + 1)} / {formatNumber(photos.length)}
+          </span>
         </header>
 
         <section className="viewer-identity">
-          <h1>ACID AFTERPARTY</h1>
+          <h1>HALLOWEEN HOME</h1>
           <span>HALLOWEEN ’26</span>
         </section>
 
         <figure className="viewer-photo">
-          <img src={activePhoto.signedUrl} alt={`Party photo ${viewerIndex + 1}`} />
+          <img
+            src={activePhoto.signedUrl}
+            alt={`Party photo ${viewerIndex + 1}`}
+          />
         </figure>
-
-        <div className="viewer-metadata">
-          <div className="photographer">
-            <span>PHOTOGRAPHER</span>
-            <strong>A PARTY GUEST</strong>
-          </div>
-          <span className="viewer-date">{formatPhotoDate(activePhoto.createdAt)}</span>
-        </div>
 
         <nav className="photo-navigation" aria-label="Browse photos">
           <button
@@ -209,13 +256,19 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             onClick={() => {
               setViewerIndex((viewerIndex - 1 + photos.length) % photos.length);
               setPreparedFiles(null);
-              setSaveMessage('');
-              setSaveError('');
+              setSaveMessage("");
+              setSaveError("");
+              setShareCompleted(false);
             }}
           >
-            <svg aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M11.5 3.5 6 9l5.5 5.5" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 18 18" fill="none">
+              <path d="M11.5 3.5 6 9l5.5 5.5" />
+            </svg>
           </button>
-          <span>PHOTO {formatNumber(viewerIndex + 1)} OF {formatNumber(photos.length)}</span>
+          <span>
+            PHOTO {formatNumber(viewerIndex + 1)} OF{" "}
+            {formatNumber(photos.length)}
+          </span>
           <button
             type="button"
             aria-label="Next photo"
@@ -223,25 +276,59 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             onClick={() => {
               setViewerIndex((viewerIndex + 1) % photos.length);
               setPreparedFiles(null);
-              setSaveMessage('');
-              setSaveError('');
+              setSaveMessage("");
+              setSaveError("");
+              setShareCompleted(false);
             }}
           >
-            <svg aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="m6.5 3.5 5.5 5.5-5.5 5.5" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 18 18" fill="none">
+              <path d="m6.5 3.5 5.5 5.5-5.5 5.5" />
+            </svg>
           </button>
         </nav>
 
         <section className="viewer-save-panel" aria-label="Save photo">
-          <button className="save-photos-button" type="button" disabled={saving} onClick={() => handleSave([activePhoto])}>
+          <button
+            className="save-photos-button"
+            type="button"
+            disabled={saving || shareCompleted}
+            onClick={() => handleSave([activePhoto])}
+          >
             <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
               <path d="M10 2.5v10m0 0 4-4m-4 4-4-4M3.5 13.5v3h13v-3" />
             </svg>
-            {saving ? saveProgress : preparedFiles ? 'OPEN SAVE MENU' : 'SAVE PHOTO'}
-            <svg className="save-arrow" aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M5 13 13 5M5 5h8v8" /></svg>
+            {saving
+              ? saveProgress
+              : shareCompleted
+                ? "DONE"
+                : preparedFiles
+                  ? "OPEN SAVE MENU"
+                  : "SAVE PHOTO"}
+            {!shareCompleted && (
+              <svg
+                className="save-arrow"
+                aria-hidden="true"
+                viewBox="0 0 18 18"
+                fill="none"
+              >
+                <path d="M5 13 13 5M5 5h8v8" />
+              </svg>
+            )}
           </button>
-          <p>Photos prepare first. Tap again to open the share menu and save to Photos or Files.</p>
-          {saveMessage && <p className="save-message" role="status">{saveMessage}</p>}
-          {saveError && <p className="save-error" role="alert">{saveError}</p>}
+          <p>
+            Photos prepare first. Tap again to open the share menu and save to
+            Photos or Files.
+          </p>
+          {saveMessage && (
+            <p className="save-message" role="status">
+              {saveMessage}
+            </p>
+          )}
+          {saveError && (
+            <p className="save-error" role="alert">
+              {saveError}
+            </p>
+          )}
         </section>
       </main>
     );
@@ -250,7 +337,9 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
   return (
     <main className="page-shell gallery-shell">
       <header className="gallery-header">
-        <a className="gallery-wordmark" href="/" aria-label="Party Camera home">PARTY CAMERA</a>
+        <a className="gallery-wordmark" href="/" aria-label="Party Camera home">
+          PARTY CAMERA
+        </a>
         <span className="gallery-edition">HALLOWEEN / 2026</span>
       </header>
 
@@ -262,8 +351,9 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
           onClick={() => {
             setSelectedIds(new Set());
             setPreparedFiles(null);
-            setSaveMessage('');
-            setSaveError('');
+            setSaveMessage("");
+            setSaveError("");
+            setShareCompleted(false);
           }}
         >
           CANCEL
@@ -275,21 +365,30 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
         <button
           type="button"
           onClick={() => {
-            setSelectedIds(allSelected ? new Set() : new Set(photos.map((photo) => photo.id)));
+            setSelectedIds(
+              allSelected
+                ? new Set()
+                : new Set(photos.map((photo) => photo.id)),
+            );
             setPreparedFiles(null);
-            setSaveMessage('');
-            setSaveError('');
+            setSaveMessage("");
+            setSaveError("");
+            setShareCompleted(false);
           }}
           disabled={loading || photos.length === 0}
         >
-          {allSelected ? 'DESELECT ALL' : 'SELECT ALL'}
+          {allSelected ? "DESELECT ALL" : "SELECT ALL"}
         </button>
       </div>
 
       {loading ? (
-        <div className="gallery-status" role="status">DEVELOPING THE PHOTOS…</div>
+        <div className="gallery-status" role="status">
+          DEVELOPING THE PHOTOS…
+        </div>
       ) : error ? (
-        <div className="gallery-status gallery-error" role="alert">{error}</div>
+        <div className="gallery-status gallery-error" role="alert">
+          {error}
+        </div>
       ) : photos.length === 0 ? (
         <div className="gallery-status">NO PHOTOS MADE IT ONTO THE ROLL.</div>
       ) : (
@@ -298,7 +397,10 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             {photos.map((photo, index) => {
               const isSelected = selectedIds.has(photo.id);
               return (
-                <article className={`photo-tile${isSelected ? ' is-selected' : ''}`} key={photo.id}>
+                <article
+                  className={`photo-tile${isSelected ? " is-selected" : ""}`}
+                  key={photo.id}
+                >
                   <button
                     className="photo-open-button"
                     type="button"
@@ -311,11 +413,15 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
                   <button
                     className="photo-select-button"
                     type="button"
-                    aria-label={`${isSelected ? 'Deselect' : 'Select'} photo ${index + 1}`}
+                    aria-label={`${isSelected ? "Deselect" : "Select"} photo ${index + 1}`}
                     aria-pressed={isSelected}
                     onClick={() => toggleSelected(photo.id)}
                   >
-                    {isSelected && <svg aria-hidden="true" viewBox="0 0 14 14" fill="none"><path d="m2.5 7 3 3 6-6" /></svg>}
+                    {isSelected && (
+                      <svg aria-hidden="true" viewBox="0 0 14 14" fill="none">
+                        <path d="m2.5 7 3 3 6-6" />
+                      </svg>
+                    )}
                   </button>
                 </article>
               );
@@ -327,11 +433,16 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             <span>{selectedIds.size} SELECTED</span>
           </div>
 
-          <section className="batch-save-panel" aria-label="Save selected photos">
+          <section
+            className="batch-save-panel"
+            aria-label="Save selected photos"
+          >
             <button
               className="save-photos-button"
               type="button"
-              disabled={selectedPhotos.length === 0 || saving}
+              disabled={
+                selectedPhotos.length === 0 || saving || shareCompleted
+              }
               onClick={() => handleSave(selectedPhotos)}
             >
               <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
@@ -339,16 +450,38 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
               </svg>
               {saving
                 ? saveProgress
-                : preparedFiles
-                  ? `OPEN SAVE MENU (${preparedFiles.length})`
-                : selectedPhotos.length
-                  ? `SAVE ${selectedPhotos.length} ${selectedPhotos.length === 1 ? 'PHOTO' : 'PHOTOS'}`
-                  : 'SELECT PHOTOS TO SAVE'}
-              <svg className="save-arrow" aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M5 13 13 5M5 5h8v8" /></svg>
+                : shareCompleted
+                  ? "DONE"
+                  : preparedFiles
+                    ? `OPEN SAVE MENU (${preparedFiles.length})`
+                    : selectedPhotos.length
+                      ? `SAVE ${selectedPhotos.length} ${selectedPhotos.length === 1 ? "PHOTO" : "PHOTOS"}`
+                      : "SELECT PHOTOS TO SAVE"}
+              {!shareCompleted && (
+                <svg
+                  className="save-arrow"
+                  aria-hidden="true"
+                  viewBox="0 0 18 18"
+                  fill="none"
+                >
+                  <path d="M5 13 13 5M5 5h8v8" />
+                </svg>
+              )}
             </button>
-            <p>Photos prepare first. Tap again to open the share menu and save to Photos or Files.</p>
-            {saveMessage && <p className="save-message" role="status">{saveMessage}</p>}
-            {saveError && <p className="save-error" role="alert">{saveError}</p>}
+            <p>
+              Photos prepare first. Tap again to open the share menu and save to
+              Photos or Files.
+            </p>
+            {saveMessage && (
+              <p className="save-message" role="status">
+                {saveMessage}
+              </p>
+            )}
+            {saveError && (
+              <p className="save-error" role="alert">
+                {saveError}
+              </p>
+            )}
           </section>
         </>
       )}
@@ -366,7 +499,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [takingPhoto, setTakingPhoto] = useState(false);
   const [previewImageFailed, setPreviewImageFailed] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -383,7 +516,12 @@ export default function App() {
         setRemaining(result.remaining);
       })
       .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : 'Could not join this party.');
+        if (active)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not join this party.",
+          );
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -410,7 +548,12 @@ export default function App() {
         if (active) setGallery(photos);
       })
       .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : 'Could not load the gallery.');
+        if (active)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not load the gallery.",
+          );
       })
       .finally(() => {
         if (active) setGalleryLoading(false);
@@ -428,22 +571,30 @@ export default function App() {
 
   async function onSelectPhoto(file: File | undefined) {
     if (!file || !event || !user) return;
-    setError('');
+    setError("");
 
-    if (!file.type.startsWith('image/')) {
-      setError('Choose an image to take your shot.');
+    if (!file.type.startsWith("image/")) {
+      setError("Choose an image to take your shot.");
       return;
     }
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'].includes(file.type)) {
-      setError('Use a JPEG, PNG, WebP or HEIC photo.');
+    if (
+      ![
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/heic",
+        "image/heif",
+      ].includes(file.type)
+    ) {
+      setError("Use a JPEG, PNG, WebP or HEIC photo.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError('That photo is over 10 MB. Choose a smaller image.');
+      setError("That photo is over 10 MB. Choose a smaller image.");
       return;
     }
     if (remaining <= 0) {
-      setError('Your camera is out of shots.');
+      setError("Your camera is out of shots.");
       return;
     }
 
@@ -452,48 +603,78 @@ export default function App() {
       const nextRemaining = await takePhoto(file, event.id, user.id);
       setRemaining(nextRemaining);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not save your photo. Please try again.');
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Could not save your photo. Please try again.",
+      );
     } finally {
       setTakingPhoto(false);
     }
   }
 
   const revealDate = event
-    ? new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Europe/Berlin',
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short',
+    ? new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Berlin",
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZoneName: "short",
       }).format(new Date(event.reveal_at))
-    : '';
+    : "";
   const totalHours = countdown.days * 24 + countdown.hours;
 
   if (event && revealed) {
-    return <PhotoGallery photos={gallery} loading={galleryLoading} error={error} />;
+    return (
+      <PhotoGallery photos={gallery} loading={galleryLoading} error={error} />
+    );
   }
 
   return (
     <main className="page-shell">
       <header className="topbar">
-        <a className="wordmark" href="/" aria-label="Party Camera home">PARTY CAMERA</a>
+        <a className="wordmark" href="/" aria-label="Party Camera home">
+          PARTY CAMERA
+        </a>
         <span className="topbar-note">HALLOWEEN / 2026</span>
       </header>
 
       <section className="camera-card" aria-labelledby="page-title">
         <div className="hero-copy">
-          <p className="kicker"><span className="live-dot" /> YOU HAD TO BE THERE.</p>
+          <p className="kicker">
+            <span className="live-dot" /> YOU HAD TO BE THERE.
+          </p>
           <h1 id="page-title">
-            {revealed ? <>THE BIG<br />REVEAL.</> : <>DRESSED TO<br />DIE FOR.</>}
+            {revealed ? (
+              <>
+                THE BIG
+                <br />
+                REVEAL.
+              </>
+            ) : (
+              <>
+                DRESSED TO
+                <br />
+                DIE FOR.
+              </>
+            )}
           </h1>
         </div>
 
         <section className="party-evidence" aria-label="Party photo preview">
           <div className="poster-rail">
-            <span className="party-date">31<br />OCT</span>
-            <span className="photo-number">ONE<br />NIGHT</span>
+            <span className="party-date">
+              31
+              <br />
+              OCT
+            </span>
+            <span className="photo-number">
+              ONE
+              <br />
+              NIGHT
+            </span>
           </div>
           <div className="evidence-print">
             {previewImageFailed ? (
@@ -509,22 +690,30 @@ export default function App() {
                 onError={() => setPreviewImageFailed(true)}
               />
             )}
-            {!revealed && <span className="sealed-sticker">NO PEEKING UNTIL REVEAL ↗</span>}
+            {!revealed && (
+              <span className="sealed-sticker">NO PEEKING UNTIL REVEAL ↗</span>
+            )}
           </div>
         </section>
 
         <p className="intro">
           {revealed
-            ? 'The night, from every angle. All the party photos are finally here.'
-            : '24 shots each. One special night. Your camera lives right here in your browser.'}
+            ? "The night, from every angle. All the party photos are finally here."
+            : "24 shots each. One special night. Your camera lives right here in your browser."}
         </p>
 
         {loading ? (
-          <div className="status-panel" role="status">Getting your camera ready…</div>
+          <div className="status-panel" role="status">
+            Getting your camera ready…
+          </div>
         ) : !isSupabaseConfigured ? (
           <div className="status-panel setup-panel">
             <strong>Almost ready to shoot.</strong>
-            <span>Add your Supabase project URL and anon key to <code>.env.local</code>, then run the setup in <code>supabase/schema.sql</code>.</span>
+            <span>
+              Add your Supabase project URL and anon key to{" "}
+              <code>.env.local</code>, then run the setup in{" "}
+              <code>supabase/schema.sql</code>.
+            </span>
           </div>
         ) : error && !event ? (
           <div className="status-panel error-panel" role="alert">
@@ -532,18 +721,29 @@ export default function App() {
             <span>{error}</span>
           </div>
         ) : event ? (
-          <section className="camera-body" aria-label="Camera and reveal countdown">
+          <section
+            className="camera-body"
+            aria-label="Camera and reveal countdown"
+          >
             <div className="camera-status">
               <div className="camera-state">
-                <span className="counter-label">{takingPhoto ? 'CAMERA / SAVING' : 'YOUR CAMERA / READY'}</span>
+                <span className="counter-label">
+                  {takingPhoto ? "CAMERA / SAVING" : "YOUR CAMERA / READY"}
+                </span>
                 <span className="shots-remaining">SHOTS REMAINING</span>
               </div>
-              <div className="shot-count" aria-label={`${remaining} shots remaining`}>
-                <span>{formatNumber(remaining)}</span><small> / {PHOTO_LIMIT}</small>
+              <div
+                className="shot-count"
+                aria-label={`${remaining} shots remaining`}
+              >
+                <span>{formatNumber(remaining)}</span>
+                <small> / {PHOTO_LIMIT}</small>
               </div>
             </div>
 
-            <label className={`shutter-button${takingPhoto || remaining === 0 ? ' is-disabled' : ''}`}>
+            <label
+              className={`shutter-button${takingPhoto || remaining === 0 ? " is-disabled" : ""}`}
+            >
               <input
                 type="file"
                 accept="image/*"
@@ -551,11 +751,17 @@ export default function App() {
                 disabled={takingPhoto || remaining === 0}
                 onChange={(change) => {
                   void onSelectPhoto(change.currentTarget.files?.[0]);
-                  change.currentTarget.value = '';
+                  change.currentTarget.value = "";
                 }}
               />
               <img className="shutter-icon" src="/icons/camera.svg" alt="" />
-              <span>{takingPhoto ? 'Saving your shot' : remaining === 0 ? 'Roll finished' : 'Take a photo'}</span>
+              <span>
+                {takingPhoto
+                  ? "Saving your shot"
+                  : remaining === 0
+                    ? "Roll finished"
+                    : "Take a photo"}
+              </span>
             </label>
 
             <p className="privacy-note">
@@ -580,7 +786,10 @@ export default function App() {
                   className="countdown"
                   aria-label={`${countdown.days} days, ${countdown.hours} hours, ${countdown.minutes} minutes, ${countdown.seconds} seconds until reveal`}
                 >
-                  <span className="countdown-clock">{formatNumber(totalHours)}:{formatNumber(countdown.minutes)}:{formatNumber(countdown.seconds)}</span>
+                  <span className="countdown-clock">
+                    {formatNumber(totalHours)}:{formatNumber(countdown.minutes)}
+                    :{formatNumber(countdown.seconds)}
+                  </span>
                   <span className="countdown-units">
                     <span>HR</span>
                     <span>MIN</span>
@@ -588,12 +797,18 @@ export default function App() {
                   </span>
                 </div>
               </div>
-              <span className="reveal-hint">At reveal, this link becomes our shared gallery.</span>
+              <span className="reveal-hint">
+                At reveal, this link becomes our shared gallery.
+              </span>
             </div>
           </section>
         ) : null}
 
-        {error && event && <p className="inline-error" role="alert">{error}</p>}
+        {error && event && (
+          <p className="inline-error" role="alert">
+            {error}
+          </p>
+        )}
 
         <footer className="card-footer">
           <span>HALLOWEEN ’26 · ONE NIGHT ONLY</span>
