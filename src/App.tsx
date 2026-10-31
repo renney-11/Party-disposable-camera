@@ -74,9 +74,9 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
     setSaving(true);
     setDownloadMessage('');
     setDownloadError('');
-    let saved = 0;
 
     try {
+      const files: File[] = [];
       for (const [index, photo] of photosToSave.entries()) {
         setSaveProgress(`PREPARING ${index + 1} / ${photosToSave.length}`);
         const photoNumber = photos.indexOf(photo) + 1;
@@ -85,26 +85,52 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
         const downloadUrl = await createPhotoDownloadUrl(photo, fileName);
         const response = await fetch(downloadUrl);
         if (!response.ok) throw new Error(`Could not download photo ${formatNumber(photoNumber)}.`);
-        const downloadObjectUrl = URL.createObjectURL(await response.blob());
+        const blob = await response.blob();
+        files.push(new File([blob], fileName, { type: blob.type || 'image/jpeg' }));
+      }
+
+      if (navigator.share && navigator.canShare?.({ files })) {
+        setSaveProgress('OPENING SHARE MENU…');
+        try {
+          await navigator.share({
+            files,
+            title: 'Acid Afterparty photos',
+            text: 'Save these photos to your device.',
+          });
+          setDownloadMessage('SHARE MENU CLOSED. CHECK YOUR PHOTOS OR FILES.');
+          return;
+        } catch (cause) {
+          if (cause instanceof DOMException && cause.name === 'AbortError') {
+            setDownloadMessage('SHARE CANCELED. NO PHOTOS WERE SAVED.');
+            return;
+          }
+          setDownloadMessage('SHARE MENU UNAVAILABLE. SAVING TO DOWNLOADS…');
+        }
+      }
+
+      for (const [index, file] of files.entries()) {
+        setSaveProgress(`SAVING ${index + 1} / ${files.length}`);
+        const downloadObjectUrl = URL.createObjectURL(file);
         const link = document.createElement('a');
         link.href = downloadObjectUrl;
-        link.download = fileName;
+        link.download = file.name;
         document.body.append(link);
         link.click();
         link.remove();
         window.setTimeout(() => URL.revokeObjectURL(downloadObjectUrl), 1000);
-        saved += 1;
 
-        if (index < photosToSave.length - 1) {
+        if (index < files.length - 1) {
           await new Promise((resolve) => window.setTimeout(resolve, 350));
         }
       }
-      setDownloadMessage(`SENT ${saved} ${saved === 1 ? 'PHOTO' : 'PHOTOS'} TO YOUR DOWNLOADS.`);
+      setDownloadMessage(`SENT ${files.length} ${files.length === 1 ? 'PHOTO' : 'PHOTOS'} TO YOUR DOWNLOADS.`);
     } catch (cause) {
+      if (cause instanceof DOMException && cause.name === 'AbortError') {
+        setDownloadMessage('SHARE CANCELED. NO PHOTOS WERE SAVED.');
+        return;
+      }
       const reason = cause instanceof Error ? cause.message : 'The download could not be prepared.';
-      setDownloadError(saved
-        ? `Downloaded ${saved} of ${photosToSave.length} photos. ${reason}`
-        : reason);
+      setDownloadError(reason);
     } finally {
       setSaving(false);
       setSaveProgress('');
@@ -169,7 +195,7 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             {saving ? saveProgress : 'SAVE PHOTO'}
             <svg className="save-arrow" aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M5 13 13 5M5 5h8v8" /></svg>
           </button>
-          <p>Save a copy of this photo to your device.</p>
+          <p>Use your share menu to save a copy to Photos or Files.</p>
           {downloadMessage && <p className="download-message" role="status">{downloadMessage}</p>}
           {downloadError && <p className="download-error" role="alert">{downloadError}</p>}
         </section>
@@ -260,7 +286,7 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
                   : 'SELECT PHOTOS TO SAVE'}
               <svg className="save-arrow" aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M5 13 13 5M5 5h8v8" /></svg>
             </button>
-            <p>Photos download to your device. Your browser may ask permission for multiple downloads.</p>
+            <p>Use the share menu to save to Photos or Files. If unavailable, photos download to your device.</p>
             {downloadMessage && <p className="download-message" role="status">{downloadMessage}</p>}
             {downloadError && <p className="download-error" role="alert">{downloadError}</p>}
           </section>

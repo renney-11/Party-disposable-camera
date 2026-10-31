@@ -405,7 +405,7 @@ h1 {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  padding: 12px 20px 20px;
+  padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
   background: var(--color-background);
 }
 
@@ -583,13 +583,24 @@ h1 {
 
 .remaining-gallery span:last-child { color: var(--gallery-accent); }
 
-.batch-save-panel,
 .viewer-save-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
+}
+
+.batch-save-panel {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding: 16px 0 calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, rgb(17 21 15 / 0%), var(--color-background) 14px);
 }
 
 .save-photos-button {
@@ -622,8 +633,8 @@ h1 {
 }
 
 .save-photos-button .save-arrow { width: 18px; height: 18px; }
-.batch-save-panel > p,
 .viewer-save-panel > p { margin: 0; color: var(--color-text); text-align: center; font-size: 11px; line-height: 1.5; }
+.batch-save-panel > p { margin: 0; color: var(--color-text); text-align: center; font-size: 10px; line-height: 1.4; }
 .batch-save-panel > .download-message,
 .viewer-save-panel > .download-message { color: var(--gallery-accent); font-family: var(--font-mono); font-size: 9px; }
 .batch-save-panel > .download-error,
@@ -757,7 +768,7 @@ h1 {
   .party-evidence { grid-template-columns: 27px minmax(0, 1fr); gap: 8px; }
   .reveal-panel { padding: 10px; }
   .reveal-date { font-size: 8px; }
-  .gallery-shell { padding: 12px 16px 20px; }
+  .gallery-shell { padding: 12px 16px calc(20px + env(safe-area-inset-bottom)); }
   .selection-heading h1 { font-size: 32px; }
   .viewer-identity h1 { font-size: 24px; }
 }
