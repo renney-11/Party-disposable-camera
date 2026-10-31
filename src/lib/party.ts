@@ -14,6 +14,8 @@ export type PartyEvent = {
 export type GalleryPhoto = {
   id: string;
   signedUrl: string;
+  storagePath: string;
+  createdAt: string;
 };
 
 export async function joinParty(): Promise<{ user: User; event: PartyEvent; remaining: number }> {
@@ -83,7 +85,7 @@ export async function loadGallery(eventId: string): Promise<GalleryPhoto[]> {
   const supabase = getSupabase();
   const { data: photos, error: photosError } = await supabase
     .from('photos')
-    .select('id, storage_path')
+    .select('id, storage_path, created_at')
     .eq('event_id', eventId)
     .order('created_at', { ascending: true });
   if (photosError) throw photosError;
@@ -94,9 +96,23 @@ export async function loadGallery(eventId: string): Promise<GalleryPhoto[]> {
         .from(PHOTO_BUCKET)
         .createSignedUrl(photo.storage_path, 60 * 60);
       if (error) throw error;
-      return { id: photo.id, signedUrl: data.signedUrl };
+      return {
+        id: photo.id,
+        signedUrl: data.signedUrl,
+        storagePath: photo.storage_path,
+        createdAt: photo.created_at,
+      };
     }),
   );
 
   return gallery;
+}
+
+export async function createPhotoDownloadUrl(photo: GalleryPhoto, fileName: string): Promise<string> {
+  const { data, error } = await getSupabase()
+    .storage
+    .from(PHOTO_BUCKET)
+    .createSignedUrl(photo.storagePath, 60 * 60, { download: fileName });
+  if (error) throw error;
+  return data.signedUrl;
 }
