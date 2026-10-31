@@ -635,10 +635,10 @@ h1 {
 .save-photos-button .save-arrow { width: 18px; height: 18px; }
 .viewer-save-panel > p { margin: 0; color: var(--color-text); text-align: center; font-size: 11px; line-height: 1.5; }
 .batch-save-panel > p { margin: 0; color: var(--color-text); text-align: center; font-size: 10px; line-height: 1.4; }
-.batch-save-panel > .download-message,
-.viewer-save-panel > .download-message { color: var(--gallery-accent); font-family: var(--font-mono); font-size: 9px; }
-.batch-save-panel > .download-error,
-.viewer-save-panel > .download-error { color: #ff887b; font-size: 10px; }
+.batch-save-panel > .save-message,
+.viewer-save-panel > .save-message { color: var(--gallery-accent); font-family: var(--font-mono); font-size: 9px; }
+.batch-save-panel > .save-error,
+.viewer-save-panel > .save-error { color: #ff887b; font-size: 10px; }
 
 .gallery-status {
   display: grid;

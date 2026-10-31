@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { PHOTO_LIMIT, type GalleryPhoto, type PartyEvent, createPhotoDownloadUrl, joinParty, loadGallery, takePhoto } from './lib/party';
 import { isSupabaseConfigured } from './lib/supabase';
@@ -34,22 +34,41 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveProgress, setSaveProgress] = useState('');
-  const [downloadMessage, setDownloadMessage] = useState('');
-  const [downloadError, setDownloadError] = useState('');
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [preparedFiles, setPreparedFiles] = useState<File[] | null>(null);
+  const galleryScrollPosition = useRef<number | null>(null);
   const selectedPhotos = photos.filter((photo) => selectedIds.has(photo.id));
   const allSelected = photos.length > 0 && selectedIds.size === photos.length;
   const activePhoto = viewerIndex === null ? null : photos[viewerIndex];
 
   useEffect(() => {
+    if (viewerIndex !== null) {
+      window.scrollTo(0, 0);
+    } else if (galleryScrollPosition.current !== null) {
+      window.scrollTo(0, galleryScrollPosition.current);
+      galleryScrollPosition.current = null;
+    }
+  }, [viewerIndex]);
+
+  useEffect(() => {
     if (viewerIndex === null) return;
+    const currentViewerIndex = viewerIndex;
+
+    function changePhoto(index: number) {
+      setViewerIndex(index);
+      setPreparedFiles(null);
+      setSaveMessage('');
+      setSaveError('');
+    }
 
     function onKeyDown(keyEvent: KeyboardEvent) {
       if (keyEvent.key === 'Escape') setViewerIndex(null);
       if (keyEvent.key === 'ArrowLeft') {
-        setViewerIndex((index) => index === null ? null : (index - 1 + photos.length) % photos.length);
+        changePhoto((currentViewerIndex - 1 + photos.length) % photos.length);
       }
       if (keyEvent.key === 'ArrowRight') {
-        setViewerIndex((index) => index === null ? null : (index + 1) % photos.length);
+        changePhoto((currentViewerIndex + 1) % photos.length);
       }
     }
 
@@ -64,16 +83,18 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
       else updated.add(photoId);
       return updated;
     });
-    setDownloadMessage('');
-    setDownloadError('');
+    setPreparedFiles(null);
+    setSaveMessage('');
+    setSaveError('');
   }
 
-  async function savePhotos(photosToSave: GalleryPhoto[]) {
+  async function preparePhotos(photosToSave: GalleryPhoto[]) {
     if (saving || photosToSave.length === 0) return;
 
     setSaving(true);
-    setDownloadMessage('');
-    setDownloadError('');
+    setPreparedFiles(null);
+    setSaveMessage('');
+    setSaveError('');
 
     try {
       const files: File[] = [];
@@ -84,57 +105,70 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
         const fileName = `acid-afterparty-${formatNumber(photoNumber)}.${extension}`;
         const downloadUrl = await createPhotoDownloadUrl(photo, fileName);
         const response = await fetch(downloadUrl);
-        if (!response.ok) throw new Error(`Could not download photo ${formatNumber(photoNumber)}.`);
+        if (!response.ok) throw new Error(`Could not prepare photo ${formatNumber(photoNumber)}.`);
         const blob = await response.blob();
         files.push(new File([blob], fileName, { type: blob.type || 'image/jpeg' }));
       }
-
-      if (navigator.share && navigator.canShare?.({ files })) {
-        setSaveProgress('OPENING SHARE MENU…');
-        try {
-          await navigator.share({
-            files,
-            title: 'Acid Afterparty photos',
-            text: 'Save these photos to your device.',
-          });
-          setDownloadMessage('SHARE MENU CLOSED. CHECK YOUR PHOTOS OR FILES.');
-          return;
-        } catch (cause) {
-          if (cause instanceof DOMException && cause.name === 'AbortError') {
-            setDownloadMessage('SHARE CANCELED. NO PHOTOS WERE SAVED.');
-            return;
-          }
-          setDownloadMessage('SHARE MENU UNAVAILABLE. SAVING TO DOWNLOADS…');
-        }
+      if (!navigator.share || !navigator.canShare?.({ files })) {
+        throw new Error('This browser cannot share photo files. Open the party link in Safari or Chrome on your phone.');
       }
-
-      for (const [index, file] of files.entries()) {
-        setSaveProgress(`SAVING ${index + 1} / ${files.length}`);
-        const downloadObjectUrl = URL.createObjectURL(file);
-        const link = document.createElement('a');
-        link.href = downloadObjectUrl;
-        link.download = file.name;
-        document.body.append(link);
-        link.click();
-        link.remove();
-        window.setTimeout(() => URL.revokeObjectURL(downloadObjectUrl), 1000);
-
-        if (index < files.length - 1) {
-          await new Promise((resolve) => window.setTimeout(resolve, 350));
-        }
-      }
-      setDownloadMessage(`SENT ${files.length} ${files.length === 1 ? 'PHOTO' : 'PHOTOS'} TO YOUR DOWNLOADS.`);
+      setPreparedFiles(files);
+      setSaveMessage('PHOTOS READY. TAP OPEN SAVE MENU.');
     } catch (cause) {
-      if (cause instanceof DOMException && cause.name === 'AbortError') {
-        setDownloadMessage('SHARE CANCELED. NO PHOTOS WERE SAVED.');
-        return;
-      }
-      const reason = cause instanceof Error ? cause.message : 'The download could not be prepared.';
-      setDownloadError(reason);
+      const reason = cause instanceof Error ? cause.message : 'The selected photos could not be prepared.';
+      setSaveError(reason);
     } finally {
       setSaving(false);
       setSaveProgress('');
     }
+  }
+
+  async function openShareMenu(files: File[]) {
+    if (saving) return;
+    if (!navigator.share || !navigator.canShare?.({ files })) {
+      setSaveError('This browser cannot share photo files. Open the party link in Safari or Chrome on your phone.');
+      return;
+    }
+
+    setSaving(true);
+    setSaveMessage('');
+    setSaveError('');
+    try {
+      const shareRequest = navigator.share({
+        files,
+        title: 'Acid Afterparty photos',
+        text: 'Save these photos to your device.',
+      });
+      setSaveProgress('OPENING SAVE MENU…');
+      await shareRequest;
+      setSaveMessage('SHARE MENU CLOSED. CHECK YOUR PHOTOS OR FILES.');
+      setPreparedFiles(null);
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === 'AbortError') {
+        setSaveMessage('SHARE CANCELED. NO PHOTOS WERE SAVED.');
+        return;
+      }
+      setSaveError(cause instanceof Error ? cause.message : 'The share menu could not be opened.');
+    } finally {
+      setSaving(false);
+      setSaveProgress('');
+    }
+  }
+
+  function handleSave(photosToSave: GalleryPhoto[]) {
+    if (preparedFiles) {
+      void openShareMenu(preparedFiles);
+    } else {
+      void preparePhotos(photosToSave);
+    }
+  }
+
+  function openPhoto(index: number) {
+    galleryScrollPosition.current = window.scrollY;
+    setPreparedFiles(null);
+    setSaveMessage('');
+    setSaveError('');
+    setViewerIndex(index);
   }
 
   if (activePhoto && viewerIndex !== null) {
@@ -172,7 +206,12 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             type="button"
             aria-label="Previous photo"
             disabled={photos.length < 2}
-            onClick={() => setViewerIndex((viewerIndex - 1 + photos.length) % photos.length)}
+            onClick={() => {
+              setViewerIndex((viewerIndex - 1 + photos.length) % photos.length);
+              setPreparedFiles(null);
+              setSaveMessage('');
+              setSaveError('');
+            }}
           >
             <svg aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M11.5 3.5 6 9l5.5 5.5" /></svg>
           </button>
@@ -181,23 +220,28 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
             type="button"
             aria-label="Next photo"
             disabled={photos.length < 2}
-            onClick={() => setViewerIndex((viewerIndex + 1) % photos.length)}
+            onClick={() => {
+              setViewerIndex((viewerIndex + 1) % photos.length);
+              setPreparedFiles(null);
+              setSaveMessage('');
+              setSaveError('');
+            }}
           >
             <svg aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="m6.5 3.5 5.5 5.5-5.5 5.5" /></svg>
           </button>
         </nav>
 
         <section className="viewer-save-panel" aria-label="Save photo">
-          <button className="save-photos-button" type="button" disabled={saving} onClick={() => void savePhotos([activePhoto])}>
+          <button className="save-photos-button" type="button" disabled={saving} onClick={() => handleSave([activePhoto])}>
             <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
               <path d="M10 2.5v10m0 0 4-4m-4 4-4-4M3.5 13.5v3h13v-3" />
             </svg>
-            {saving ? saveProgress : 'SAVE PHOTO'}
+            {saving ? saveProgress : preparedFiles ? 'OPEN SAVE MENU' : 'SAVE PHOTO'}
             <svg className="save-arrow" aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M5 13 13 5M5 5h8v8" /></svg>
           </button>
-          <p>Use your share menu to save a copy to Photos or Files.</p>
-          {downloadMessage && <p className="download-message" role="status">{downloadMessage}</p>}
-          {downloadError && <p className="download-error" role="alert">{downloadError}</p>}
+          <p>Photos prepare first. Tap again to open the share menu and save to Photos or Files.</p>
+          {saveMessage && <p className="save-message" role="status">{saveMessage}</p>}
+          {saveError && <p className="save-error" role="alert">{saveError}</p>}
         </section>
       </main>
     );
@@ -212,7 +256,16 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
 
       <section className="selection-heading" aria-labelledby="gallery-title">
         <h1 id="gallery-title">{selectedIds.size} SELECTED</h1>
-        <button type="button" className="clear-selection" onClick={() => setSelectedIds(new Set())}>
+        <button
+          type="button"
+          className="clear-selection"
+          onClick={() => {
+            setSelectedIds(new Set());
+            setPreparedFiles(null);
+            setSaveMessage('');
+            setSaveError('');
+          }}
+        >
           CANCEL
         </button>
       </section>
@@ -221,7 +274,12 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
         <span>CHOOSE PHOTOS TO SAVE</span>
         <button
           type="button"
-          onClick={() => setSelectedIds(allSelected ? new Set() : new Set(photos.map((photo) => photo.id)))}
+          onClick={() => {
+            setSelectedIds(allSelected ? new Set() : new Set(photos.map((photo) => photo.id)));
+            setPreparedFiles(null);
+            setSaveMessage('');
+            setSaveError('');
+          }}
           disabled={loading || photos.length === 0}
         >
           {allSelected ? 'DESELECT ALL' : 'SELECT ALL'}
@@ -245,7 +303,7 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
                     className="photo-open-button"
                     type="button"
                     aria-label={`Open photo ${index + 1}`}
-                    onClick={() => setViewerIndex(index)}
+                    onClick={() => openPhoto(index)}
                   >
                     <img src={photo.signedUrl} alt="" loading="lazy" />
                   </button>
@@ -274,21 +332,23 @@ function PhotoGallery({ photos, loading, error }: { photos: GalleryPhoto[]; load
               className="save-photos-button"
               type="button"
               disabled={selectedPhotos.length === 0 || saving}
-              onClick={() => void savePhotos(selectedPhotos)}
+              onClick={() => handleSave(selectedPhotos)}
             >
               <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
                 <path d="M10 2.5v10m0 0 4-4m-4 4-4-4M3.5 13.5v3h13v-3" />
               </svg>
               {saving
                 ? saveProgress
+                : preparedFiles
+                  ? `OPEN SAVE MENU (${preparedFiles.length})`
                 : selectedPhotos.length
                   ? `SAVE ${selectedPhotos.length} ${selectedPhotos.length === 1 ? 'PHOTO' : 'PHOTOS'}`
                   : 'SELECT PHOTOS TO SAVE'}
               <svg className="save-arrow" aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M5 13 13 5M5 5h8v8" /></svg>
             </button>
-            <p>Use the share menu to save to Photos or Files. If unavailable, photos download to your device.</p>
-            {downloadMessage && <p className="download-message" role="status">{downloadMessage}</p>}
-            {downloadError && <p className="download-error" role="alert">{downloadError}</p>}
+            <p>Photos prepare first. Tap again to open the share menu and save to Photos or Files.</p>
+            {saveMessage && <p className="save-message" role="status">{saveMessage}</p>}
+            {saveError && <p className="save-error" role="alert">{saveError}</p>}
           </section>
         </>
       )}

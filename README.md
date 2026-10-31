@@ -106,7 +106,7 @@ Open that preview link on your phone, take a photo, wait for the countdown, and 
 - The database enforces the 24-photo limit per anonymous guest session.
 - Guest identity is browser-based, not a phone hardware ID. Clearing browser data or switching devices can create a new guest identity.
 - Anyone with the event link can open the gallery after reveal.
-- After reveal, guests can tap a photo to view it, or select multiple photos and save them using the device's share sheet when supported. On phones, the share sheet may offer a **Save Image** or **Save to Photos** option; browsers do not provide a direct camera-roll permission prompt. If sharing files is unavailable, the page downloads the selected photos instead.
+- After reveal, guests can tap a photo to view it, or select multiple photos and save them using the device's share sheet when supported. Photo files prepare after the first tap; a second tap opens the share sheet, which may offer a **Save Image** or **Save to Photos** option. Browsers do not provide a direct camera-roll permission prompt or a universal camera-roll API. If file sharing is unsupported, the page explains how to open it in a compatible mobile browser instead of starting downloads.
 - The Supabase project URL and anon/publishable key are intended for the website. Never expose a Supabase `service_role` or secret key.
 - The visual styles and theme variables are in `src/styles.css`; event/photo operations are in `src/lib/party.ts`; Supabase rules and event time are in `supabase/schema.sql`.
 - To add the design's sample party photo, put a JPEG named `IMG_7897.jpg` in `public/photos/`. The page uses it as a preview; it is separate from guests' private Supabase uploads.
