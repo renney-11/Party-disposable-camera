@@ -300,7 +300,7 @@ function PhotoGallery({
             {saving
               ? saveProgress
               : shareCompleted
-                ? "DONE"
+                ? "SAVED"
                 : preparedFiles
                   ? "OPEN SAVE MENU"
                   : "SAVE PHOTO"}
@@ -451,7 +451,7 @@ function PhotoGallery({
               {saving
                 ? saveProgress
                 : shareCompleted
-                  ? "DONE"
+                  ? "SAVED"
                   : preparedFiles
                     ? `OPEN SAVE MENU (${preparedFiles.length})`
                     : selectedPhotos.length
