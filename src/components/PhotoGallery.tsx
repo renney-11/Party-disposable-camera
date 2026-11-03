@@ -216,7 +216,7 @@ export default function PhotoGallery({
   if (activePhoto && viewerIndex !== null) {
     return (
       <main className={`${shellClass} photo-viewer-shell`}>
-        <header className="flex min-h-[42px] items-center justify-between border-0 font-mono text-accent">
+        <header className="flex min-h-10.5 items-center justify-between border-0 font-mono text-accent">
           <button
             className="inline-flex items-center gap-[7px] border-0 bg-transparent p-0 font-mono text-[11px] text-accent"
             type="button"
