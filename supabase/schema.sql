@@ -7,7 +7,7 @@ create table if not exists public.events (
 );
 
 insert into public.events (id, name, reveal_at)
-values ('party', 'The Party', '2026-11-01 15:00:00+01')
+values ('saxon-trip', 'Saxon Trip', '2026-11-16 15:00:00+01')
 on conflict (id) do update
 set name = excluded.name,
     reveal_at = excluded.reveal_at;

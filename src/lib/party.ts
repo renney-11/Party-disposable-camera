@@ -1,7 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 
-export const EVENT_ID = 'party';
+export const EVENT_ID = 'saxon-trip';
 export const PHOTO_LIMIT = 24;
 export const PHOTO_BUCKET = 'party-photos';
 

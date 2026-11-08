@@ -2,13 +2,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: #202020;
-  --color-background: #11150f;
-  --color-accent: #39ff14;
-  --color-text: #afba9a;
-  --color-heading: #39ff14;
-  --color-border: #3e4b2d;
-  --color-muted: #78836a;
+  --color-page: #20231d;
+  --color-background: #151a16;
+  --color-accent: #d7ad58;
+  --color-text: #d2d3c5;
+  --color-heading: #efe7d2;
+  --color-border: #424a3d;
+  --color-muted: #9da38f;
   --font-display: "Anton", Impact, sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
   --font-body: "Inter", sans-serif;

@@ -25,7 +25,7 @@ Guests will not need to register or enter an email. Their anonymous session is s
 ## 3. Create the database and private photo bucket
 
 1. In this repository, open `supabase/schema.sql`.
-2. The event is currently configured for **1 November 2026 at 3:00 pm Europe/Berlin**. The SQL timestamp is `2026-11-01 15:00:00+01` because Berlin is on UTC+01 in November. If you need a different time, edit that timestamp before running the SQL.
+2. The Saxon trip is configured to reveal on **16 November 2026 at 3:00 pm Europe/Berlin**. The SQL timestamp is `2026-11-16 15:00:00+01` because Berlin is on UTC+01 in November. Edit that timestamp before running the SQL if the reveal time changes.
 3. In the Supabase dashboard, go to **SQL Editor** and choose **New query**.
 4. Copy all of `supabase/schema.sql` into the query editor and select **Run**.
 5. Check that the query completes without an error. It creates the event, photos table, access policies, and a private `party-photos` storage bucket. You do not need to create the bucket separately.

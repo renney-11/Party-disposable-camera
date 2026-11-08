@@ -121,7 +121,7 @@ export default function PhotoGallery({
         const photoNumber = photos.indexOf(photo) + 1;
         const extension =
           photo.storagePath.split(".").pop()?.toLowerCase() || "jpg";
-        const fileName = `halloween-home-${formatNumber(photoNumber)}.${extension}`;
+        const fileName = `saxon-trip-${formatNumber(photoNumber)}.${extension}`;
         const downloadUrl = await createPhotoDownloadUrl(photo, fileName);
         const response = await fetch(downloadUrl);
         if (!response.ok) {
@@ -169,7 +169,7 @@ export default function PhotoGallery({
       // The share call must happen from a user gesture for mobile browsers.
       const shareRequest = navigator.share({
         files,
-        title: "Halloween Home photos",
+        title: "Saxon Trip photos",
         text: "Save these photos to your device.",
       });
       setSaveProgress("OPENING SAVE MENU…");
@@ -248,9 +248,9 @@ export default function PhotoGallery({
 
         <section className="flex min-h-[84px] items-end justify-between gap-[10px] py-[18px] pb-6">
           <h1 className="font-display text-[28px] leading-[1.5] text-accent max-[360px]:text-2xl">
-            HALLOWEEN HOME
+            SAXON TRIP
           </h1>
-          <span className="font-mono text-[9px] text-text">HALLOWEEN ’26</span>
+          <span className="font-mono text-[9px] text-text">TRIP PHOTOS</span>
         </section>
 
         <figure className="grid h-[min(410px,55vh)] min-h-[240px] w-full place-items-center bg-[#090c08]">
@@ -367,11 +367,11 @@ export default function PhotoGallery({
         <a
           className="text-xs font-semibold tracking-[-0.5px] no-underline"
           href="/"
-          aria-label="Party Camera home"
+          aria-label="Saxon Trip Camera home"
         >
-          PARTY CAMERA
+          SAXON TRIP CAMERA
         </a>
-        <span className="text-[9px] text-text">HALLOWEEN / 2026</span>
+        <span className="text-[9px] text-text">ONE-TIME TRIP</span>
       </header>
 
       <section

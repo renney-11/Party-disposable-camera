@@ -59,18 +59,18 @@ export default function CameraScreen({
         <a
           className="text-[9px] font-semibold tracking-[-0.03em] no-underline"
           href="/"
-          aria-label="Party Camera home"
+          aria-label="Saxon Trip Camera home"
         >
-          PARTY CAMERA
+          SAXON TRIP CAMERA
         </a>
-        <span className="text-[8px]">HALLOWEEN / 2026</span>
+        <span className="text-[8px]">ONE-TIME TRIP</span>
       </header>
 
       <section className="flex flex-1 flex-col" aria-labelledby="page-title">
         <div className="mb-3.5">
           <p className="mb-2 flex items-center gap-1.75 font-mono text-[8px] tracking-[0.16em] text-accent">
             <span className="h-1.5 w-1.5 shrink-0 bg-accent" />
-            YOU HAD TO BE THERE.
+            OUT THERE, TOGETHER.
           </p>
           <h1
             id="page-title"
@@ -78,34 +78,34 @@ export default function CameraScreen({
           >
             {revealed ? (
               <>
-                THE BIG
+                THE TRIP
                 <br />
-                REVEAL.
+                REVEALED.
               </>
             ) : (
               <>
-                DRESSED TO
+                SAXON
                 <br />
-                DIE FOR.
+                TRIP.
               </>
             )}
           </h1>
         </div>
 
         <section
-          className="grid grid-cols-[30px_minmax(0,1fr)] items-center gap-2.5 max-[360px]:grid-cols-[27px_minmax(0,1fr)] max-[360px]:gap-2"
-          aria-label="Party photo preview"
+          className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-2.5 max-[360px]:grid-cols-[42px_minmax(0,1fr)] max-[360px]:gap-2"
+          aria-label="Saxon trip photo preview"
         >
           <div className="flex h-full flex-col items-start justify-between py-1">
-            <span className="font-display text-[22px] leading-[0.95] text-accent">
-              31
+            <span className="font-display text-[14px] leading-[0.95] text-accent">
+              SAXON
               <br />
-              OCT
+              TRIP
             </span>
             <span className="font-mono text-[7px] leading-[1.3] text-text">
               ONE
               <br />
-              NIGHT
+              TRIP
             </span>
           </div>
           <div className="relative aspect-290/215 w-full bg-accent p-0.75">
@@ -120,13 +120,13 @@ export default function CameraScreen({
               <img
                 className="block h-full w-full object-cover"
                 src="/photos/IMG_7897.jpg"
-                alt="Halloween party preview"
+                alt="Saxon trip preview"
                 onError={onPreviewImageError}
               />
             )}
             {!revealed && (
               <span className="absolute -right-2 bottom-4.25 whitespace-nowrap bg-accent px-2.25 py-1.5 font-mono text-[7px] font-semibold text-background">
-                NO PEEKING UNTIL REVEAL ↗
+                MEMORIES UNLOCK AT REVEAL ↗
               </span>
             )}
           </div>
@@ -134,8 +134,8 @@ export default function CameraScreen({
 
         <p className="my-3.5 mb-4 text-[10px] leading-normal text-text">
           {revealed
-            ? "The night, from every angle. All the party photos are finally here."
-            : `${photoLimit} shots each. One special night. Your camera lives right here in your browser.`}
+            ? "The trip, from every angle. All your photos are finally here."
+            : `${photoLimit} shots each. One trip together. Your camera lives right here in your browser.`}
         </p>
 
         {loading ? (
@@ -158,7 +158,7 @@ export default function CameraScreen({
         ) : error && !event ? (
           <StatusPanel>
             <strong className="text-[13px] text-accent">
-              Couldn’t join the party.
+              Couldn’t join the trip.
             </strong>
             <span>{error}</span>
           </StatusPanel>
@@ -220,7 +220,7 @@ export default function CameraScreen({
             <div className="flex h-28.25 flex-col gap-2.5 border border-border bg-background px-4 py-3.5 max-[360px]:p-2.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono text-[9px] leading-3 tracking-[1px] text-text">
-                  THE BIG REVEAL
+                  THE PHOTO REVEAL
                 </span>
                 <span className="inline-flex items-center gap-1 font-mono text-[9px] leading-3 text-accent">
                   <span
@@ -255,7 +255,7 @@ export default function CameraScreen({
                 </div>
               </div>
               <span className="text-[10px] leading-3 text-text">
-                At reveal, this link becomes our shared gallery.
+                At reveal, this link becomes our shared trip album.
               </span>
             </div>
           </section>
@@ -268,7 +268,7 @@ export default function CameraScreen({
         )}
 
         <footer className="mt-5 flex items-center justify-between gap-2.5 border-t border-border pt-3 font-mono text-[8px] leading-2.5 tracking-[0.5px] text-text">
-          <span>HALLOWEEN ’26 · ONE NIGHT ONLY</span>
+          <span>SAXON TRIP · ONE TRIP ONLY</span>
         </footer>
       </section>
     </main>
