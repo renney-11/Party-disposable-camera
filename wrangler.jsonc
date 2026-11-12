@@ -1,0 +1,21 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "saxon-trip-api",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-11-09",
+	"vars": {
+		"SUPABASE_URL": "https://xezbehawyymgviycgxev.supabase.co",
+		"SUPABASE_ANON_KEY": "sb_publishable_ZsO4KFLniQHq-Khi_goCaA_gqU08wdk",
+		"CLOUDINARY_CLOUD_NAME": "tdogfps5",
+		"CLOUDINARY_API_KEY": "869355879468152",
+		"ALLOWED_ORIGINS": "http://localhost:5173,https://party-disposable-camera-git-saxon-trip-renney-11s-projects.vercel.app"
+	},
+	"d1_databases": [
+		{
+			"binding": "saxon_trip_db",
+			"database_name": "saxon-trip-db",
+			"database_id": "0ec18c6a-3337-4763-a2e1-cab2a5ff0852",
+			"migrations_dir": "worker/migrations"
+		}
+	]
+}

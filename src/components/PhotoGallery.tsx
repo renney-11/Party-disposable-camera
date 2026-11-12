@@ -122,7 +122,7 @@ export default function PhotoGallery({
         const extension =
           photo.storagePath.split(".").pop()?.toLowerCase() || "jpg";
         const fileName = `saxon-trip-${formatNumber(photoNumber)}.${extension}`;
-        const downloadUrl = await createPhotoDownloadUrl(photo, fileName);
+        const downloadUrl = await createPhotoDownloadUrl(photo);
         const response = await fetch(downloadUrl);
         if (!response.ok) {
           throw new Error(
@@ -445,7 +445,7 @@ export default function PhotoGallery({
                   >
                     <img
                       className="block h-full w-full object-cover transition-transform duration-200 hover:scale-[1.035]"
-                      src={photo.signedUrl}
+                      src={photo.thumbnailUrl}
                       alt=""
                       loading="lazy"
                     />

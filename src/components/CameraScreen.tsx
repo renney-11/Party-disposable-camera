@@ -146,13 +146,8 @@ export default function CameraScreen({
               Almost ready to shoot.
             </strong>
             <span>
-              Add your Supabase project URL and anon key to{" "}
-              <code className="text-[10px] text-accent">.env.local</code>, then
-              run the setup in{" "}
-              <code className="text-[10px] text-accent">
-                supabase/schema.sql
-              </code>
-              .
+              Add your Supabase URL/key and Saxon API URL to{" "}
+              <code className="text-[10px] text-accent">.env.local</code>.
             </span>
           </StatusPanel>
         ) : error && !event ? (

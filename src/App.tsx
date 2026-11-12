@@ -6,7 +6,9 @@ import {
   loadGallery,
   PHOTO_LIMIT,
   takePhoto,
+  isPartyApiConfigured,
 } from "./lib/party";
+import { compressPhoto } from "./lib/photoCompression";
 import { isSupabaseConfigured } from "./lib/supabase";
 import CameraScreen from "./components/CameraScreen";
 import PhotoGallery from "./components/PhotoGallery";
@@ -41,7 +43,7 @@ export default function App() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || !isPartyApiConfigured) {
       setLoading(false);
       return;
     }
@@ -142,7 +144,8 @@ export default function App() {
 
     setTakingPhoto(true);
     try {
-      const nextRemaining = await takePhoto(file, event.id, user.id);
+      const { photo, thumbnail } = await compressPhoto(file);
+      const nextRemaining = await takePhoto(photo, thumbnail, event.id);
       setRemaining(nextRemaining);
     } catch (cause) {
       setError(
@@ -177,7 +180,7 @@ export default function App() {
     <CameraScreen
       event={event}
       loading={loading}
-      configured={isSupabaseConfigured}
+      configured={isSupabaseConfigured && isPartyApiConfigured}
       photoLimit={PHOTO_LIMIT}
       remaining={remaining}
       takingPhoto={takingPhoto}
