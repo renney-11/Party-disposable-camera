@@ -24,7 +24,7 @@ function GalleryStatus({
 }) {
   return (
     <div
-      className={`grid min-h-[130px] place-items-center border border-border text-center font-mono text-[10px] ${error ? "text-[#ff887b]" : "text-text"}`}
+      className={`grid min-h-[130px] place-items-center border border-border bg-panel text-center font-mono text-[10px] ${error ? "text-error" : "text-text"}`}
       role={error ? "alert" : "status"}
     >
       {children}
@@ -211,14 +211,14 @@ export default function PhotoGallery({
   }
 
   const shellClass =
-    "mx-auto flex min-h-screen w-[min(100%,390px)] flex-col bg-background px-5 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] max-[360px]:px-4";
+    "trip-shell mx-auto flex min-h-screen w-[min(100%,390px)] flex-col px-5 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))] max-[360px]:px-4";
 
   if (activePhoto && viewerIndex !== null) {
     return (
       <main className={`${shellClass} photo-viewer-shell`}>
-        <header className="flex min-h-10.5 items-center justify-between border-0 font-mono text-accent">
+        <header className="flex min-h-10.5 items-center justify-between border-0 font-mono text-heading">
           <button
-            className="inline-flex items-center gap-[7px] border-0 bg-transparent p-0 font-mono text-[11px] text-accent"
+            className="inline-flex items-center gap-[7px] border-0 bg-transparent p-0 font-mono text-[11px] text-heading"
             type="button"
             onClick={() => {
               setViewerIndex(null);
@@ -247,13 +247,13 @@ export default function PhotoGallery({
         </header>
 
         <section className="flex min-h-[84px] items-end justify-between gap-[10px] py-[18px] pb-6">
-          <h1 className="font-display text-[28px] leading-[1.5] text-accent max-[360px]:text-2xl">
+          <h1 className="font-display text-[28px] font-bold leading-[1.2] text-heading max-[360px]:text-2xl">
             SAXON TRIP
           </h1>
           <span className="font-mono text-[9px] text-text">TRIP PHOTOS</span>
         </section>
 
-        <figure className="grid h-[min(410px,55vh)] min-h-[240px] w-full place-items-center bg-[#090c08]">
+        <figure className="grid h-[min(410px,55vh)] min-h-[240px] w-full place-items-center border border-border bg-page">
           <img
             className="block h-full w-full object-contain"
             src={activePhoto.signedUrl}
@@ -266,7 +266,7 @@ export default function PhotoGallery({
           aria-label="Browse photos"
         >
           <button
-            className="grid h-6 w-6 place-items-center border-0 bg-transparent p-0 text-accent disabled:opacity-40"
+            className="grid h-6 w-6 place-items-center border-0 bg-transparent p-0 text-heading disabled:opacity-40"
             type="button"
             aria-label="Previous photo"
             disabled={photos.length < 2}
@@ -295,7 +295,7 @@ export default function PhotoGallery({
             {formatNumber(photos.length)}
           </span>
           <button
-            className="grid h-6 w-6 place-items-center border-0 bg-transparent p-0 text-accent disabled:opacity-40"
+            className="grid h-6 w-6 place-items-center border-0 bg-transparent p-0 text-heading disabled:opacity-40"
             type="button"
             aria-label="Next photo"
             disabled={photos.length < 2}
@@ -322,7 +322,7 @@ export default function PhotoGallery({
         </nav>
 
         <section
-          className="flex flex-col gap-3 border-t-0 pt-[14px]"
+          className="flex flex-col gap-3 border-t border-border pt-[14px]"
           aria-label="Save photo"
         >
           <SavePhotosButton
@@ -345,14 +345,14 @@ export default function PhotoGallery({
           </p>
           {saveMessage && (
             <p
-              className="font-mono text-[9px] text-accent"
+              className="font-mono text-[9px] text-heading"
               role="status"
             >
               {saveMessage}
             </p>
           )}
           {saveError && (
-            <p className="text-[10px] text-[#ff887b]" role="alert">
+            <p className="text-[10px] text-error" role="alert">
               {saveError}
             </p>
           )}
@@ -363,7 +363,7 @@ export default function PhotoGallery({
 
   return (
     <main className={shellClass}>
-      <header className="flex min-h-12 items-center justify-between gap-3 border-b border-accent font-mono text-accent">
+      <header className="flex min-h-12 items-center justify-between gap-3 border-b border-border font-mono text-heading">
         <a
           className="text-xs font-semibold tracking-[-0.5px] no-underline"
           href="/"
@@ -371,36 +371,28 @@ export default function PhotoGallery({
         >
           SAXON TRIP CAMERA
         </a>
-        <span className="text-[9px] text-text">ONE-TIME TRIP</span>
+        <span className="text-[9px] text-muted">THE ALBUM</span>
       </header>
 
       <section
-        className="flex min-h-[90px] items-center justify-between gap-[10px] py-5 pb-4"
+        className="flex flex-col gap-2 py-5 pb-4"
         aria-labelledby="gallery-title"
       >
         <h1
           id="gallery-title"
-          className="font-display text-4xl leading-[1.5] text-accent max-[360px]:text-[32px]"
+          className="font-display text-[31px] font-bold leading-[1.12] tracking-[-0.045em] text-text max-[360px]:text-[29px]"
         >
-          {selectedIds.size} SELECTED
+          THE TRIP,
+          <br />
+          <span className="text-heading">REVEALED</span>
         </h1>
-        <button
-          className="cursor-pointer border-0 bg-transparent px-0 py-1 font-mono text-xs text-accent underline"
-          type="button"
-          onClick={() => {
-            setSelectedIds(new Set());
-            setPreparedFiles(null);
-            setSaveMessage("");
-            setSaveError("");
-            setShareCompleted(false);
-          }}
-        >
-          CANCEL
-        </button>
+        <p className="font-mono text-[8px] tracking-[0.04em] text-muted">
+          ALL THE LITTLE MOMENTS, TOGETHER.
+        </p>
       </section>
 
-      <div className="flex min-h-[38px] items-start justify-between gap-[10px] border-t border-border py-[10px] pb-[14px] font-mono text-[10px] leading-[14px] text-text">
-        <span>CHOOSE PHOTOS TO SAVE</span>
+      <div className="flex min-h-[38px] items-start justify-between gap-[10px] border-t border-border py-[10px] pb-[14px] font-mono text-[10px] leading-[14px] text-muted">
+        <span>{formatNumber(photos.length)} PHOTOS</span>
         <button
           className="shrink-0 cursor-pointer border-0 bg-transparent p-0 font-mono text-[10px] leading-[14px] text-accent disabled:cursor-default disabled:opacity-45"
           type="button"
@@ -417,7 +409,7 @@ export default function PhotoGallery({
           }}
           disabled={loading || photos.length === 0}
         >
-          {allSelected ? "DESELECT ALL" : "SELECT ALL"}
+          {allSelected ? "DESELECT ALL" : "SELECT ALL  +"}
         </button>
       </div>
 
@@ -434,7 +426,7 @@ export default function PhotoGallery({
               const isSelected = selectedIds.has(photo.id);
               return (
                 <article
-                  className={`relative aspect-[114/125] overflow-hidden bg-[#252a23] ${isSelected ? "outline-3 -outline-offset-[3px] outline-accent" : ""}`}
+                  className={`relative aspect-[114/125] overflow-hidden border border-border bg-page ${isSelected ? "outline-2 -outline-offset-2 outline-accent" : ""}`}
                   key={photo.id}
                 >
                   <button
@@ -450,11 +442,11 @@ export default function PhotoGallery({
                       loading="lazy"
                     />
                   </button>
-                  <span className="pointer-events-none absolute bottom-[5px] left-[5px] bg-[rgb(17_21_15_/_78%)] px-[5px] py-[2px] font-mono text-[8px] leading-[11px] text-accent">
+                  <span className="pointer-events-none absolute bottom-0 left-0 bg-page px-[6px] py-[3px] font-mono text-[8px] leading-[11px] text-heading">
                     {formatNumber(index + 1)}
                   </span>
                   <button
-                    className={`absolute right-[7px] top-[7px] grid h-[22px] w-[22px] cursor-pointer place-items-center rounded-full border bg-[rgb(17_21_15_/_78%)] p-0 text-background ${isSelected ? "border-accent bg-accent" : "border-[#eef0e7]"}`}
+                    className={`absolute right-[7px] top-[7px] grid h-[22px] w-[22px] cursor-pointer place-items-center border p-0 text-background ${isSelected ? "border-accent bg-accent" : "border-heading bg-page"}`}
                     type="button"
                     aria-label={`${isSelected ? "Deselect" : "Select"} photo ${index + 1}`}
                     aria-pressed={isSelected}
@@ -479,13 +471,27 @@ export default function PhotoGallery({
             })}
           </div>
 
-          <div className="flex min-h-[42px] items-start justify-between gap-[10px] py-[14px] font-mono text-[10px] leading-[14px] text-text">
-            <span>{photos.length} PHOTOS IN THE GALLERY</span>
-            <span className="text-accent">{selectedIds.size} SELECTED</span>
+          <div className="flex min-h-[42px] items-start justify-between gap-[10px] py-[14px] font-mono text-[10px] leading-[14px] text-heading">
+            <span>{selectedIds.size} SELECTED</span>
+            {selectedIds.size > 0 && (
+              <button
+                className="cursor-pointer border-0 bg-transparent p-0 font-mono text-[10px] leading-[14px] text-muted"
+                type="button"
+                onClick={() => {
+                  setSelectedIds(new Set());
+                  setPreparedFiles(null);
+                  setSaveMessage("");
+                  setSaveError("");
+                  setShareCompleted(false);
+                }}
+              >
+                CLEAR
+              </button>
+            )}
           </div>
 
           <section
-            className="sticky bottom-0 z-[5] mt-auto flex flex-col gap-[10px] bg-[linear-gradient(to_bottom,transparent,var(--color-background)_14px)] py-4 pb-[calc(10px+env(safe-area-inset-bottom))]"
+            className="sticky bottom-0 z-[5] mt-auto flex flex-col gap-[10px] bg-background py-4 pb-[calc(10px+env(safe-area-inset-bottom))]"
             aria-label="Save selected photos"
           >
             <SavePhotosButton
@@ -506,7 +512,7 @@ export default function PhotoGallery({
               onClick={() => handleSave(selectedPhotos)}
               showArrow={!shareCompleted}
             />
-            <p className="text-center text-[10px] leading-[1.4] text-text">
+            <p className="text-center text-[10px] leading-[1.4] text-muted">
               Photos prepare first. Tap again to open the share menu and save to
               Photos or Files.
             </p>
@@ -519,7 +525,7 @@ export default function PhotoGallery({
               </p>
             )}
             {saveError && (
-              <p className="text-[10px] text-[#ff887b]" role="alert">
+              <p className="text-[10px] text-error" role="alert">
                 {saveError}
               </p>
             )}

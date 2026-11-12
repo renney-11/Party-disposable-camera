@@ -1,17 +1,30 @@
-@import url("https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-page: #20231d;
-  --color-background: #151a16;
-  --color-accent: #d7ad58;
-  --color-text: #d2d3c5;
-  --color-heading: #efe7d2;
-  --color-border: #424a3d;
-  --color-muted: #9da38f;
-  --font-display: "Anton", Impact, sans-serif;
+  --color-page: #1f1428;
+  --color-background: #24172e;
+  --color-panel: #33223f;
+  --color-accent: #bb91db;
+  --color-text: #eee6f2;
+  --color-heading: #d0b4e6;
+  --color-border: #624b70;
+  --color-muted: #b8a9c1;
+  --color-error: #e0a6c2;
+  --font-display: "Inter", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
   --font-body: "Inter", sans-serif;
+}
+
+@layer components {
+  .trip-shell {
+    background-color: var(--color-background);
+    background-image: repeating-radial-gradient(
+      circle at 65% 19%,
+      transparent 0 52px,
+      rgb(187 145 219 / 8%) 53px 54px
+    );
+  }
 }
 
 @layer base {
