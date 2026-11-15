@@ -119,9 +119,7 @@ export default function PhotoGallery({
       for (const [index, photo] of photosToSave.entries()) {
         setSaveProgress(`PREPARING ${index + 1} / ${photosToSave.length}`);
         const photoNumber = photos.indexOf(photo) + 1;
-        const extension =
-          photo.storagePath.split(".").pop()?.toLowerCase() || "jpg";
-        const fileName = `saxon-trip-${formatNumber(photoNumber)}.${extension}`;
+        const fileName = `saxon-trip-${formatNumber(photoNumber)}.jpg`;
         const downloadUrl = await createPhotoDownloadUrl(photo);
         const response = await fetch(downloadUrl);
         if (!response.ok) {
@@ -131,7 +129,7 @@ export default function PhotoGallery({
         }
         const blob = await response.blob();
         files.push(
-          new File([blob], fileName, { type: blob.type || "image/jpeg" }),
+          new File([blob], fileName, { type: "image/jpeg" }),
         );
       }
       if (!navigator.share || !navigator.canShare?.({ files })) {

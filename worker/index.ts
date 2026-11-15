@@ -352,44 +352,43 @@ async function handleUpload(
 
   const totalBytes = fullAsset.bytes + thumbnailAsset.bytes;
   const now = new Date().toISOString();
-  let insertResult: D1Result;
+  const insertStatement = env.saxon_trip_db.prepare(
+    `INSERT INTO photos (
+       id, event_id, user_id, storage_path, thumbnail_path,
+       full_version, thumbnail_version, created_at, bytes
+     )
+     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+     WHERE EXISTS (
+       SELECT 1 FROM events WHERE id = ? AND reveal_at > ?
+     )
+     AND (
+       SELECT COUNT(*) FROM photos WHERE event_id = ? AND user_id = ?
+     ) < ?
+     AND (
+       SELECT COALESCE(SUM(bytes), 0) FROM photos WHERE event_id = ?
+     ) + ? <= ?`,
+  ).bind(
+    photoId,
+    EVENT_ID,
+    user.id,
+    fullId,
+    thumbnailId,
+    fullAsset.version,
+    thumbnailAsset.version,
+    now,
+    totalBytes,
+    EVENT_ID,
+    now,
+    EVENT_ID,
+    user.id,
+    PHOTO_LIMIT,
+    EVENT_ID,
+    totalBytes,
+    MAX_EVENT_STORAGE_BYTES,
+  );
+  let insertResult: Awaited<ReturnType<typeof insertStatement.run>>;
   try {
-    insertResult = await env.saxon_trip_db.prepare(
-      `INSERT INTO photos (
-         id, event_id, user_id, storage_path, thumbnail_path,
-         full_version, thumbnail_version, created_at, bytes
-       )
-       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
-       WHERE EXISTS (
-         SELECT 1 FROM events WHERE id = ? AND reveal_at > ?
-       )
-       AND (
-         SELECT COUNT(*) FROM photos WHERE event_id = ? AND user_id = ?
-       ) < ?
-       AND (
-         SELECT COALESCE(SUM(bytes), 0) FROM photos WHERE event_id = ?
-       ) + ? <= ?`,
-    )
-      .bind(
-        photoId,
-        EVENT_ID,
-        user.id,
-        fullId,
-        thumbnailId,
-        fullAsset.version,
-        thumbnailAsset.version,
-        now,
-        totalBytes,
-        EVENT_ID,
-        now,
-        EVENT_ID,
-        user.id,
-        PHOTO_LIMIT,
-        EVENT_ID,
-        totalBytes,
-        MAX_EVENT_STORAGE_BYTES,
-      )
-      .run();
+    insertResult = await insertStatement.run();
   } catch (cause) {
     for (const publicId of uploaded) {
       try {

@@ -8,7 +8,7 @@
 		"SUPABASE_ANON_KEY": "sb_publishable_ZsO4KFLniQHq-Khi_goCaA_gqU08wdk",
 		"CLOUDINARY_CLOUD_NAME": "tdogfps5",
 		"CLOUDINARY_API_KEY": "869355879468152",
-		"ALLOWED_ORIGINS": "http://localhost:5173,https://party-disposable-camera-git-saxon-trip-renney-11s-projects.vercel.app"
+		"ALLOWED_ORIGINS": "http://localhost:5173,https://party-disposable-camera-git-saxon-trip-renney-11s-projects.vercel.app,https://party-disposable-camera-git-saxon-trip-renney-11s-projects.vercel.app?_vercel_share=SYKMrQBJrvGdeAu1DQNj8KTNpuLVtdWo",
 	},
 	"d1_databases": [
 		{
